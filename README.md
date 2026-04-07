@@ -1,14 +1,30 @@
-# Observability Collapse: A Mechanism for the Failure of Early Warning Signals
+# Observability Collapse in Stochastic Nonlinear Systems
 
-**Author:** Aldo A. Aguilar B.
+**Author:** Aldo A. Aguilar Bermúdez
 
 ## Overview
 
-This repository contains the simulation code and analysis scripts for the paper:
+This repository contains the simulation code for the paper:
 
-> **Observability Collapse: A Mechanism for the Failure of Early Warning Signals**
+> **State-Dependent Observation and Detectability Collapse in Stochastic Nonlinear Systems**
 >
-> Early warning signals based on critical slowing down are widely used to anticipate transitions in complex systems. We propose a dynamical mechanism — *observability collapse* — by which these signals may be suppressed or reversed when the observation function is state-dependent and vanishes near attractor states.
+> Transition indicators based on critical slowing down can fail when the observation function loses sensitivity near attractor states. We identify this mechanism — *observability collapse* — and derive an analytical criterion separating collapse from non-collapse regimes in a supercritical pitchfork normal form.
+
+## System
+
+Supercritical pitchfork normal form under additive noise and slow parameter drift:
+
+```
+dx = (μx − x³)dt + σ dW
+```
+
+with μ drifting from 2.0 → 0.05 (approaching bifurcation at μ = 0).
+
+**Observation family:** g_α(x) = sign(x)|x|^α
+
+- α > 2: observability collapse (observed variance falls despite rising latent variance)
+- α = 2: balanced regime (signal-bearing term constant)
+- α < 2: CSD preserved (observed variance rises as expected)
 
 ## Reproducing the results
 
@@ -18,54 +34,64 @@ This repository contains the simulation code and analysis scripts for the paper:
 pip install -r requirements.txt
 ```
 
-### Figure 1 (main paper figure)
+### Generate all figures
 
 ```bash
-python figure1_code.py
+python simulation_code.py
 ```
 
-Generates `figure1_observability_collapse.png` and `.pdf`. This is a self-contained script that runs the simulation, computes rolling variance under two observation functions (state-dependent and control), and produces all four panels.
+This produces:
+- `figure1_observability_collapse.png/pdf` — Mechanism demonstration (4 panels)
+- `figure2_ablation.png/pdf` — Ablation, criterion validation, parameter sweep (4 panels)
 
-**Simulation parameters:**
-- θ₀ = 75°, N₀ = 0.45, dN/dt = −10⁻⁵ per step
-- k = 0.1, D = 15, dt = 0.05, T = 30,000 steps
-- Random seed: 123 (deterministic output)
+### Simulation parameters
 
-### Empirical analysis (openESM)
+| Parameter | Value |
+|-----------|-------|
+| μ₀ | 2.0 |
+| μ_end | 0.05 |
+| σ (noise) | 0.3 |
+| Δt | 0.01 |
+| T | 30,000 steps (300 time units) |
+| α (collapse) | 3 |
+| α (control) | 1 |
+| Rolling window | 1,500 steps |
+| Ensemble (Fig 1C) | 30 runs |
+| Sweep grid | 16 × 16 (α × σ) |
+| Sweep ensemble | 8 runs per point |
 
-```bash
-python analysis_openesm.py
-```
+### Key equations
 
-Downloads ESM datasets from [openesmdata.org](https://openesmdata.org), identifies behavioral transitions, and tests whether pre-transition variance decreases (observability collapse prediction) or increases (standard critical slowing down prediction). Results reported in Section 5 of the paper.
+**Observed variance (Eq. 4):**
 
-This analysis is exploratory and does not constitute a direct test of the mechanism, which requires state-dependent observability of latent variables not available in the current dataset.
+Var[S] ≈ (g'(x*))² · Var[x] + σ_ε²
 
-**Note:** Requires internet access to download datasets on first run.
+**Signal-bearing term for pitchfork + power-law observation:**
 
-## Key equations
+(g')² · Var[x] = (α² σ² / 4) · μ^(α−2)
 
-**State dynamics:**
+**Collapse criterion:** α > 2 (signal-bearing term → 0 as μ → 0)
 
-dθ/dt = −dV(θ)/dθ + η(t)
+## Figure descriptions
 
-**Observation function (state-dependent):**
+### Figure 1: Mechanism demonstration
+- **A.** Pitchfork potential V(x) = −μx²/2 + x⁴/4 with observation g(x) = |x|³
+- **B.** Smoothed observable signal over time (collapse vs control)
+- **C.** Eq. (4) decomposition: ensemble-averaged latent variance (rising), sensitivity (falling), observed variance (suppressed)
+- **D.** Rolling variance ablation: |x|³ variance decreases while |x| variance increases
 
-S(t) = g(θ(t)), where g(θ*) = 0 at attractor states
-
-**Variance propagation:**
-
-Var[S] ≈ (g')² · Var[θ]
-
-When g' → 0 near attractors, observed variance decreases even if latent variance increases.
+### Figure 2: Validation
+- **A.** Three observation functions: x³ (collapse), tanh(2x) (nonlinear control), x (linear control)
+- **B.** Criterion validation: theoretical boundary at α = 2 vs numerically observed boundary
+- **C.** Rolling lag-1 autocorrelation for all three observations
+- **D.** Full collapse regime: parameter sweep heatmap over (α, σ)
 
 ## Citation
 
-If you use this code, please cite:
-
 ```
-Aguilar B., A.A. (2026). Observability Collapse: A Mechanism for the Failure
-of Early Warning Signals. [Preprint]
+Aguilar Bermúdez, A.A. (2026). State-Dependent Observation and Detectability
+Collapse in Stochastic Nonlinear Systems. Preprint.
+DOI: 10.5281/zenodo.15088837
 ```
 
 ## License
