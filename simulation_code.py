@@ -184,7 +184,7 @@ def make_figure1():
                         bbox=dict(boxstyle='round,pad=0.3', fc='white', ec=C_GREY, alpha=0.8))
             break
     ax.set_xlabel('Time'); ax.set_ylabel('Normalised to peak')
-    ax.set_title(f'C.  Eq. (4) decomposition ($n={N_ENS}$ ensemble)', fontweight='bold', fontsize=11)
+    ax.set_title(f'C.  Eq. (5) decomposition ($n={N_ENS}$ ensemble)', fontweight='bold', fontsize=11)
     ax.legend(fontsize=8.5, framealpha=0.9); ax.set_ylim(0, 1.05)
 
     # D
