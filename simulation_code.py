@@ -102,12 +102,13 @@ def make_figure1():
     print("Figure 1: mechanism...")
     time = np.arange(N_STEPS) * DT
     x, mu = simulate(N_STEPS, MU_START, MU_END, SIGMA, DT, SEED_SINGLE)
-    S_col = observe(x, ALPHA_OBS)
+    # In make_figure1()
+    S_col = np.abs(x)**ALPHA_OBS
     S_ctl = np.abs(x)
 
     # B: smoothed signals
     kb = 400
-    sm_col = np.convolve(np.abs(S_col), np.ones(kb)/kb, mode='valid')
+    sm_col = np.convolve(S_col, np.ones(kb)/kb, mode='valid')
     sm_ctl = np.convolve(S_ctl, np.ones(kb)/kb, mode='valid')
     t_sm = time[kb//2:kb//2+len(sm_col)]
 
@@ -127,7 +128,7 @@ def make_figure1():
     all_rv_x, all_rv_col, all_gp = [], [], []
     for run in range(N_ENS):
         xr, _ = simulate(N_STEPS, MU_START, MU_END, SIGMA, DT, run*17+3)
-        Sr = observe(xr, ALPHA_OBS)
+        Sr = np.abs(xr)**ALPHA_OBS
         gpr = (ALPHA_OBS * np.abs(xr)**(ALPHA_OBS-1))**2
         all_rv_x.append(rolling_var(xr, W_ROLL))
         all_rv_col.append(rolling_var(Sr, W_ROLL))
@@ -160,7 +161,7 @@ def make_figure1():
     ax.text(-1, -0.13, '$x^*$', ha='center', fontsize=9, color=C_GREEN)
     ax.text(1, -0.13, '$x^*$', ha='center', fontsize=9, color=C_GREEN)
     ax.set_xlabel('$x$'); ax.set_ylabel('Normalised')
-    ax.set_title('A.  Potential and observation', fontweight='bold', fontsize=11)
+    ax.set_title('a.  Potential and observation', fontweight='bold', fontsize=11)
     ax.legend(fontsize=8.5, framealpha=0.9); ax.set_ylim(-0.18, 1.1)
 
     # B
@@ -168,14 +169,14 @@ def make_figure1():
     ax.plot(t_sm, sm_col, color=C_PURP, lw=1.2, label=f'$|x|^{ALPHA_OBS}$ (collapse)')
     ax.plot(t_sm, sm_ctl, color=C_CTRL, lw=1.2, ls='--', label='$|x|$ (control)')
     ax.set_xlabel('Time'); ax.set_ylabel('Smoothed signal')
-    ax.set_title('B.  Observation over time', fontweight='bold', fontsize=11)
+    ax.set_title('b.  Observation over time', fontweight='bold', fontsize=11)
     ax.legend(fontsize=8, framealpha=0.9); ax.set_ylim(bottom=-0.01)
 
     # C
     ax = axes[1, 0]
     ax.plot(t_pe, mx_n, color=C_GREEN, lw=2.2, label='Var[$x$] (latent)')
     ax.plot(t_pe, mg_n, color=C_CTRL, lw=2, ls='--', label="$\\langle(g')^2\\rangle$ (sensitivity)")
-    ax.plot(t_pe, mc_n, color=C_PURP, lw=2.2, label=f'Var[$x^{ALPHA_OBS}$] (observed)')
+    ax.plot(t_pe, mc_n, color=C_PURP, lw=2.2, label=f'Var[$|x|^{ALPHA_OBS}$] (observed)')
     ax.fill_between(t_pe, mc_n, mx_n, where=mx_n > mc_n*1.1, alpha=0.07, color=C_PURP)
     for i in range(len(t_pe)//3, 2*len(t_pe)//3):
         if mx_n[i] > mc_n[i]*1.5:
@@ -184,7 +185,7 @@ def make_figure1():
                         bbox=dict(boxstyle='round,pad=0.3', fc='white', ec=C_GREY, alpha=0.8))
             break
     ax.set_xlabel('Time'); ax.set_ylabel('Normalised to peak')
-    ax.set_title(f'C.  Eq. (5) decomposition ($n={N_ENS}$ ensemble)', fontweight='bold', fontsize=11)
+    ax.set_title(f'c.  Eq. (5) decomposition ($n={N_ENS}$ ensemble)', fontweight='bold', fontsize=11)
     ax.legend(fontsize=8.5, framealpha=0.9); ax.set_ylim(0, 1.05)
 
     # D
@@ -192,7 +193,7 @@ def make_figure1():
     ax.plot(t_d, rv_cn, color=C_PURP, lw=1.5, label=f'$|x|^{ALPHA_OBS}$ (variance $\\downarrow$)')
     ax.plot(t_d, rv_ln, color=C_CTRL, lw=1.5, ls='--', label='$|x|$ (control, variance $\\uparrow$)')
     ax.set_xlabel('Time'); ax.set_ylabel('Variance (normalised)')
-    ax.set_title('D.  Rolling variance: ablation', fontweight='bold', fontsize=11)
+    ax.set_title('d.  Rolling variance: ablation', fontweight='bold', fontsize=11)
     ax.legend(fontsize=8, framealpha=0.9)
 
     plt.tight_layout(pad=1.8)
@@ -228,7 +229,7 @@ def make_figure2():
     rv_t = rolling_var(S_tanh, W_ROLL)
     rv_l = rolling_var(S_lin, W_ROLL)
     sl_lat, _, _, _, _ = sp_stats.linregress(np.arange(len(rv_x)), rv_x)
-    for name, rv in [('|x|^3', rv_c), ('tanh(2x)', rv_t), ('x', rv_l)]:
+    for name, rv in [('x^3', rv_c), ('tanh(2x)', rv_t), ('x', rv_l)]:
         sl, _, _, _, _ = sp_stats.linregress(np.arange(len(rv)), rv)
         print(f"  {name}: slope = {sl:+.2e} {'COLLAPSE' if sl < 0 else ''}")
     print(f"  latent: slope = {sl_lat:+.2e}")
@@ -286,7 +287,7 @@ def make_figure2():
     ax.axvspan(-0.3, 0.3, alpha=0.06, color=C_PURP)
     ax.text(0, -2.3, 'attractor\nregion', ha='center', fontsize=8, color=C_GREY, fontstyle='italic')
     ax.set_xlabel('$x$'); ax.set_ylabel('$g(x)$')
-    ax.set_title('A.  Observation functions', fontweight='bold', fontsize=11)
+    ax.set_title('a.  Observation functions', fontweight='bold', fontsize=11)
     ax.legend(fontsize=7.5, framealpha=0.9, loc='upper left')
     ax.set_ylim(-2.5, 2.5); ax.set_xlim(-2, 2)
 
@@ -299,7 +300,7 @@ def make_figure2():
     ax.text(1.3, 0.42, 'CSD\npreserved', ha='center', fontsize=10, color=C_GREEN, alpha=0.5)
     ax.text(3.0, 0.42, 'Collapse', ha='center', fontsize=10, color=C_PURP, alpha=0.5)
     ax.set_xlabel('Observation exponent $\\alpha$'); ax.set_ylabel('Noise level $\\sigma$')
-    ax.set_title('B.  Criterion validation: theory vs numerics', fontweight='bold', fontsize=11)
+    ax.set_title('b.  Criterion validation: theory vs numerics', fontweight='bold', fontsize=11)
     ax.legend(fontsize=8.5, framealpha=0.9, loc='lower right')
     ax.set_xlim(SWEEP_ALPHAS[0], SWEEP_ALPHAS[-1])
     ax.set_ylim(SWEEP_NOISES[0]-0.02, SWEEP_NOISES[-1]+0.02)
@@ -310,7 +311,7 @@ def make_figure2():
     ax.plot(t_p, ac_tanh_s, color=C_TEAL, lw=1.8, label='$\\tanh(2x)$ (nonlin ctrl)')
     ax.plot(t_p, ac_lin_s, color=C_CTRL, lw=1.8, ls='--', label='$x$ (linear ctrl)')
     ax.set_xlabel('Time'); ax.set_ylabel('Lag-1 autocorrelation')
-    ax.set_title('C.  Rolling autocorrelation', fontweight='bold', fontsize=11)
+    ax.set_title('c.  Rolling autocorrelation', fontweight='bold', fontsize=11)
     ax.legend(fontsize=8, framealpha=0.9)
 
     # D: Full collapse regime
@@ -331,7 +332,7 @@ def make_figure2():
     ax.plot(1.0, SIGMA, 's', color=C_CTRL, ms=8, zorder=5,
             markeredgecolor='white', markeredgewidth=0.5, label='$\\alpha=1$ (control)')
     ax.set_xlabel('Observation exponent $\\alpha$'); ax.set_ylabel('Noise level $\\sigma$')
-    ax.set_title('D.  Full collapse regime (parameter sweep)', fontweight='bold', fontsize=11)
+    ax.set_title('d.  Full collapse regime (parameter sweep)', fontweight='bold', fontsize=11)
     ax.legend(fontsize=7, framealpha=0.9, loc='upper left')
     cbar = plt.colorbar(im, ax=ax, shrink=0.85, pad=0.02)
     cbar.set_label('Var[$S$] trend', fontsize=9)
